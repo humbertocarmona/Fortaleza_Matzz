@@ -567,7 +567,7 @@ def plot_relative_approval(
     )  # Add a legend with a title
     plt.tight_layout()  # Adjust layout to prevent clipping of labels
     if filename != "none":
-        filename = f"{filename}_{tit}.png"
+        filename = f"{filename}.png"
         filename = filename.replace(" ", "_")
         plt.savefig(filename, format="png", dpi=300)
         print(f"saved {filename}")
@@ -930,7 +930,7 @@ plot_relative_approval(
     "vote_intention_ewma",
     custom_palette,
     tit="Aprovação Relativa Acumulada - Instagram e Facebook combinados",
-    filename="smooth_40_18",
+    filename="smooth_Instagram_Facebook_combinados_20241004",
     ylabel="Aprovação Relativa Acumulada (%)",
     y_shift=y_shift
 
@@ -949,7 +949,7 @@ plot_relative_approval(
     "vote_intention",
     custom_palette,
     tit="Aprovação Relativa - Instagram e Facebook combinados",
-    filename="rel_appr_18",
+    filename="rel_appr_Instagram_Facebook_combinados_20241004",
     y_shift=y_shift
 )
 
