@@ -828,14 +828,33 @@ for platform in platforms:
 # %%  --------------------------------------------------------------------------
 
 cols = ["vote_intention_ewma"]
+
+y_shift = {
+    "André Fernandes": 0.0051,
+    "Evandro Leitão": -0.0051,
+    "Capitão Wagner": 0.0,
+    "José Sarto": 0.0,
+}
 platform = "Instagram"
+tit=f"Aprovação Relativa Acumulada {platform}"
+ylabel="Aprovação Relativa (%)"
+tit=f"Relative Approval {platform}"
+tit=f"EWMA Filtered Relative Approval {platform}"
+
+ylabel="Relative Approval (%)"
+filename=f"20241001_smooth_rel_approv_{platform}"
+# filename="none"
+
 for col in cols:
     plot_relative_approval(
         rel_approval[platform],
         col,
         custom_palette,
-        tit=f"Aprovação Relativa Acumulada {platform}",
-        filename="none",
+        tit=tit,
+        ylabel=ylabel, 
+        filename=filename,
+        y_shift=y_shift,
+
     )
 
 y_shift = {
@@ -845,13 +864,19 @@ y_shift = {
     "José Sarto": 0.0,
 }
 platform = "Facebook"
+tit=f"Aprovação Relativa Acumulada {platform}"
+tit=f"EWMA Filtered Relative Approval {platform}"
+filename=f"20241001_smooth_rel_approv_{platform}"
+# filename="none"
+
 for col in cols:
     plot_relative_approval(
         rel_approval[platform],
         col,
         custom_palette,
-        tit=f"Aprovação Relativa Acumulada {platform}",
-        filename="none",
+        tit=tit,
+        filename=filename,
+        ylabel=ylabel, 
         y_shift=y_shift,
     )
 
@@ -892,16 +917,23 @@ print(df_combined)
 
 # %%  --------------------------------------------------------------------------
 
+df_combined["age"] = df_combined["DS_FAIXA_ETARIA"].str.replace('anos', 'years')
+df_combined["age"] = df_combined["age"].str.replace('Superior a', 'Above')
 
 plt.figure(figsize=(10, 6))
-sns.barplot(data=df_combined, x="DS_FAIXA_ETARIA", y="frac", hue="cat")
+sns_plot=sns.barplot(data=df_combined, x="age", y="frac", hue="cat")
 
 # Rotate x labels for better readability
 plt.xticks(rotation=45, ha="right")
-plt.title("")
+plt.title("Age distribution for Instagram, Facebook and Voters")
 plt.tight_layout()
+plt.xlabel("Age")
+plt.ylabel("Fraction")
+
+legend = sns_plot.legend_
+legend.set_title("")
+plt.savefig("age_dist.png", format="png", dpi=300)
 plt.show()
-# plt.savefig("age_dist.png", format="png", dpi=300)
 
 
 # %%  --------------------------------------------------------------------------
@@ -910,6 +942,9 @@ b = np.dot(age_I["frac"], age_voters["frac"])
 
 cf = a / (a + b)
 ci = b / (a + b)
+# ci = 0.489
+# cf = 1-0.489
+
 
 print(f"{cf} {ci} {cf+ci}")
 
@@ -925,17 +960,27 @@ y_shift = {
         "José Sarto": 0
     }
 
+tit=f"Aprovação Relativa Acumulada Combined"
+ylabel="Aprovação Relativa (%)"
+ylabel="Relative Approval (%)"
+
+tit=f"Relative Approval Combined"
+filename=f"20241001_rel_approv_Combined"
+# filename="none"
+
+col="vote_intention"
+
 plot_relative_approval(
     comb,
-    "vote_intention_ewma",
+    col,
     custom_palette,
-    tit="Aprovação Relativa Acumulada - Instagram e Facebook combinados",
-    filename="smooth_Instagram_Facebook_combinados_20241004",
-    ylabel="Aprovação Relativa Acumulada (%)",
+    tit=tit,
+    filename=filename,
+    ylabel=ylabel,
     y_shift=y_shift
 
 )
-
+# %%  --------------------------------------------------------------------------
 y_shift = {
         "André Fernandes": -1.,
         "Evandro Leitão": 1.,
@@ -943,14 +988,21 @@ y_shift = {
         "José Sarto": 0
     }
 
+col="vote_intention_ewma"
+tit=f"EWMA Filtered Relative Approval Combined"
+filename=f"20241001_smooth_rel_approv_Combined"
+
+# filename="none"
 
 plot_relative_approval(
     comb,
-    "vote_intention",
+    col,
     custom_palette,
-    tit="Aprovação Relativa - Instagram e Facebook combinados",
-    filename="rel_appr_Instagram_Facebook_combinados_20241004",
+    tit=tit,
+    filename=filename,
+    ylabel=ylabel,
     y_shift=y_shift
+
 )
 
 # %%
