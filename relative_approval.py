@@ -516,6 +516,7 @@ def plot_relative_approval(
         "Capitão Wagner",
         "José Sarto",
     ],
+    ylim=(0,0)
 ):
 
     # Set the plot size
@@ -546,8 +547,8 @@ def plot_relative_approval(
         candidate_data = df[df["Candidate"] == candidate]
         x = candidate_data["dt"].iloc[-1] + x_shift
         y = candidate_data[col].iloc[-1] + y_shift[candidate]/100
-        yt = np.round(100 * candidate_data[col].iloc[-1], 0)
-        texto = f"{yt:.0f}%"
+        yt = np.round(100 * candidate_data[col].iloc[-1], decimals=1)
+        texto = f"{yt}%"
         plt.text(x, y, texto, color=custom_palette[candidate], fontsize=10, ha="left")
 
     date_format = mdates.DateFormatter("%-d de %b")
@@ -560,6 +561,8 @@ def plot_relative_approval(
         PercentFormatter(1.0, decimals=0)
     )  # 1.0 scale means values from 0 to 1 are formatted as percentages
     plt.ylabel(ylabel)  # Corrected label name for clarity
+    if ylim != (0,0):
+        plt.ylim(ylim[0], ylim[1])
 
     plt.title(tit, fontdict={"fontsize": 14, "fontweight": "bold"}, pad=40)
     plt.legend(
@@ -569,7 +572,7 @@ def plot_relative_approval(
     if filename != "none":
         filename = f"{filename}.png"
         filename = filename.replace(" ", "_")
-        plt.savefig(filename, format="png", dpi=300)
+        plt.savefig(filename, format="png", dpi=600)
         print(f"saved {filename}")
     ax.tick_params(axis='x', which='major', length=5, color='black')  # Ensure tick marks are shown
 
@@ -809,8 +812,7 @@ candidates = ["Evandro Leitão", "André Fernandes", "José Sarto", "Capitão Wa
 # candidates = ['Evandro Leitão', 'André Fernandes',  'José Sarto']
 classification = [item for sublist in candidates for item in canditatos_dic[sublist]]
 
-input_csv = "./data/approval_17.zip"
-input_csv = "./data/Aprovação_18.csv"
+input_csv = "./data/Aprovação_19a.csv"
 
 platforms = ["Instagram", "Facebook"]
 platform = platforms[0]
@@ -843,7 +845,7 @@ tit=f"EWMA Filtered Relative Approval {platform}"
 
 ylabel="Relative Approval (%)"
 filename=f"20241001_smooth_rel_approv_{platform}"
-# filename="none"
+filename="none"
 
 for col in cols:
     plot_relative_approval(
@@ -867,7 +869,7 @@ platform = "Facebook"
 tit=f"Aprovação Relativa Acumulada {platform}"
 tit=f"EWMA Filtered Relative Approval {platform}"
 filename=f"20241001_smooth_rel_approv_{platform}"
-# filename="none"
+filename="none"
 
 for col in cols:
     plot_relative_approval(
@@ -932,7 +934,7 @@ plt.ylabel("Fraction")
 
 legend = sns_plot.legend_
 legend.set_title("")
-plt.savefig("age_dist.png", format="png", dpi=300)
+# plt.savefig("age_dist.png", format="png", dpi=300)
 plt.show()
 
 
@@ -942,13 +944,13 @@ b = np.dot(age_I["frac"], age_voters["frac"])
 
 cf = a / (a + b)
 ci = b / (a + b)
-# ci = 0.489
-# cf = 1-0.489
 
 
 print(f"{cf} {ci} {cf+ci}")
 
 # %%  --------------------------------------------------------------------------
+locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
+
 comb = combine_platforms(rel_approval_dic=rel_approval, alpha=ci)
 comb = smooth_relative_approval(comb, 40)
 print(comb)
@@ -960,13 +962,14 @@ y_shift = {
         "José Sarto": 0
     }
 
-tit=f"Aprovação Relativa Acumulada Combined"
+tit=f"Aprovação Relativa - Instagram e Facebook combinados"
 ylabel="Aprovação Relativa (%)"
-ylabel="Relative Approval (%)"
+# ylabel="Relative Approval (%)"
 
-tit=f"Relative Approval Combined"
-filename=f"20241001_rel_approv_Combined"
-# filename="none"
+# tit=f"Relative Approval Combined"
+filename="none"
+if filename !="none":
+    filename=f"20241004a_rel_approv_Combined"
 
 col="vote_intention"
 
@@ -980,7 +983,6 @@ plot_relative_approval(
     y_shift=y_shift
 
 )
-# %%  --------------------------------------------------------------------------
 y_shift = {
         "André Fernandes": -1.,
         "Evandro Leitão": 1.,
@@ -989,10 +991,12 @@ y_shift = {
     }
 
 col="vote_intention_ewma"
-tit=f"EWMA Filtered Relative Approval Combined"
-filename=f"20241001_smooth_rel_approv_Combined"
+tit=f"Aprovação Relativa Acumulada - Instagram e Facebook combinados"
 
-# filename="none"
+# tit=f"EWMA Filtered Relative Approval Combined"
+if filename !="none":
+    filename=f"20241004a_smooth_rel_approv_Combined"
+
 
 plot_relative_approval(
     comb,
@@ -1001,8 +1005,10 @@ plot_relative_approval(
     tit=tit,
     filename=filename,
     ylabel=ylabel,
-    y_shift=y_shift
+    y_shift=y_shift,
+    ylim=(0.1,.4)
 
 )
 
 # %%
+10-40
