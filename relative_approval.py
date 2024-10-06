@@ -103,7 +103,6 @@ def get_posts(input_csv, platform, candidates, classification):
 
 
 def posts_and_likes(post_p):
-    print(posts_p["platform"].unique())
     df = posts_p.groupby("new_candidate")["post_id"].count().reset_index(name="c")
     df["cumm"] = np.cumsum(df["c"])
     display(df)
@@ -516,7 +515,7 @@ def plot_relative_approval(
         "Capitão Wagner",
         "José Sarto",
     ],
-    ylim=(0,0)
+    ylim=(0, 0),
 ):
 
     # Set the plot size
@@ -540,13 +539,12 @@ def plot_relative_approval(
     sns.set_theme(style="white", rc={"axes.grid": False})
     sns.despine()  # Only remove the left spine; keep the bottom spine
 
-
     # Add text labels at the last data point for each candidate
     x_shift = pd.Timedelta(days=1)  # Shift by 2 days, adjust as necessary
     for candidate in df["Candidate"].unique():
         candidate_data = df[df["Candidate"] == candidate]
         x = candidate_data["dt"].iloc[-1] + x_shift
-        y = candidate_data[col].iloc[-1] + y_shift[candidate]/100
+        y = candidate_data[col].iloc[-1] + y_shift[candidate] / 100
         yt = np.round(100 * candidate_data[col].iloc[-1], decimals=1)
         texto = f"{yt}%"
         plt.text(x, y, texto, color=custom_palette[candidate], fontsize=10, ha="left")
@@ -561,7 +559,7 @@ def plot_relative_approval(
         PercentFormatter(1.0, decimals=0)
     )  # 1.0 scale means values from 0 to 1 are formatted as percentages
     plt.ylabel(ylabel)  # Corrected label name for clarity
-    if ylim != (0,0):
+    if ylim != (0, 0):
         plt.ylim(ylim[0], ylim[1])
 
     plt.title(tit, fontdict={"fontsize": 14, "fontweight": "bold"}, pad=40)
@@ -574,7 +572,9 @@ def plot_relative_approval(
         filename = filename.replace(" ", "_")
         plt.savefig(filename, format="png", dpi=600)
         print(f"saved {filename}")
-    ax.tick_params(axis='x', which='major', length=5, color='black')  # Ensure tick marks are shown
+    ax.tick_params(
+        axis="x", which="major", length=5, color="black"
+    )  # Ensure tick marks are shown
 
     # plt.subplots_adjust(top=0.85)
     plt.show()
@@ -812,85 +812,98 @@ candidates = ["Evandro Leitão", "André Fernandes", "José Sarto", "Capitão Wa
 # candidates = ['Evandro Leitão', 'André Fernandes',  'José Sarto']
 classification = [item for sublist in candidates for item in canditatos_dic[sublist]]
 
-input_csv = "./data/Aprovação_19a.csv"
+hoje = "20241006a"
+# hoje = "20241004"
+# hoje = "20241001"
+
+input_csv = "./data/approval_20a.zip"
+input_csv = "./data/approval_19.zip"
+# input_csv = "./data/approval_18.zip"
+# input_csv = "./data/Aprovação_18.csv"
 
 platforms = ["Instagram", "Facebook"]
-platform = platforms[0]
 
 rel_approval = {}
 posts_p = {}
-for platform in platforms:
-    print(f"computing {platform} ==============================================")
-    posts_p[platform] = get_posts(input_csv, platform, candidates, classification)
-    rel_approval[platform] = compute_relative_approval(posts_p[platform], N=30)
+run_app=True
+if run_app:
+    for platform in platforms:
+        print(f"computing {platform} ==============================================")
+        posts_p[platform] = get_posts(input_csv, platform, candidates, classification)
+        rel_approval[platform] = compute_relative_approval(posts_p[platform], N=30)
+        
+        filename = f"{hoje}_{platform}_rel_approval.csv"
+        rel_approval[platform].to_csv(filename,index=False)
+        print(f"saved {filename} {type(rel_approval[platform])}")
+        
+        filename = f"{hoje}_{platform}_clean.csv"
+        posts_p[platform].to_csv(filename, index=False)
+        print(f"saved {filename} {type(posts_p[platform])}")
 
-for platform in platforms:
-    rel_approval[platform] = smooth_relative_approval(rel_approval[platform], 40)
+    for platform in platforms:
+        rel_approval[platform] = smooth_relative_approval(rel_approval[platform], 40)
+else:
+    for platform in platforms:
+        filename = f"{hoje}_{platform}_rel_approval.csv"
+        rel_approval[platform] = pd.read_csv(filename)
+        filename = f"{hoje}_{platform}_clean.csv"
+        posts_p[platform] = pd.read_csv(filename)
+
+
+
 
 # %%  --------------------------------------------------------------------------
 
-cols = ["vote_intention_ewma"]
+cols = ["vote_intention", "vote_intention_ewma"]
+y_shifts = [
+    {
+        "André Fernandes": 0.0051,
+        "Evandro Leitão": -0.0051,
+        "Capitão Wagner": 0.0,
+        "José Sarto": 0.0,
+    },
+    {
+        "André Fernandes": 0.0051,
+        "Evandro Leitão": -0.0051,
+        "Capitão Wagner": 0.0,
+        "José Sarto": 0.0,
+    },
+]
 
-y_shift = {
-    "André Fernandes": 0.0051,
-    "Evandro Leitão": -0.0051,
-    "Capitão Wagner": 0.0,
-    "José Sarto": 0.0,
-}
-platform = "Instagram"
-tit=f"Aprovação Relativa Acumulada {platform}"
-ylabel="Aprovação Relativa (%)"
-tit=f"Relative Approval {platform}"
-tit=f"EWMA Filtered Relative Approval {platform}"
 
-ylabel="Relative Approval (%)"
-filename=f"20241001_smooth_rel_approv_{platform}"
-filename="none"
+for platform, y_shift in zip(platforms, y_shifts):
+    for col in cols:
+        if col == "vote_intention":
+            tit = f"Relative Approval {platform}"
+            tit = f"Aprovação Relativa Acumulada {platform}"
+            filename = f"{hoje}_rel_approv_{platform}"
+        else:
+            tit = f"EWMA Filtered Relative Approval {platform}"
+            filename = f"{hoje}_ewma_rel_approv_{platform}"
 
-for col in cols:
-    plot_relative_approval(
-        rel_approval[platform],
-        col,
-        custom_palette,
-        tit=tit,
-        ylabel=ylabel, 
-        filename=filename,
-        y_shift=y_shift,
+        ylabel = "Relative Approval (%)"
+        ylabel = "Aprovação Relativa (%)"
 
-    )
+        filename = "none"
 
-y_shift = {
-    "André Fernandes": 0.0051,
-    "Evandro Leitão": -0.0051,
-    "Capitão Wagner": 0.0,
-    "José Sarto": 0.0,
-}
-platform = "Facebook"
-tit=f"Aprovação Relativa Acumulada {platform}"
-tit=f"EWMA Filtered Relative Approval {platform}"
-filename=f"20241001_smooth_rel_approv_{platform}"
-filename="none"
-
-for col in cols:
-    plot_relative_approval(
-        rel_approval[platform],
-        col,
-        custom_palette,
-        tit=tit,
-        filename=filename,
-        ylabel=ylabel, 
-        y_shift=y_shift,
-    )
+        plot_relative_approval(
+            rel_approval[platform],
+            col,
+            custom_palette,
+            tit=tit,
+            ylabel=ylabel,
+            filename=filename,
+            y_shift=y_shift,
+        )
 
 
 # %%
-candidatesred = ["Evandro Leitão", "André Fernandes", "José Sarto"]
-
-for platform in platforms[0:1]:
-    col = ["vote_intention_ewma"]
-    plot_renormalized(
-        rel_approval[platform], candidatesred, custom_palette=custom_palette, col=col
-    )
+# candidatesred = ["Evandro Leitão", "André Fernandes", "José Sarto"]
+# for platform in platforms[0:1]:
+#     col = ["vote_intention_ewma"]
+#     plot_renormalized(
+#         rel_approval[platform], candidatesred, custom_palette=custom_palette, col=col
+#     )
 
 
 # %%
@@ -919,11 +932,11 @@ print(df_combined)
 
 # %%  --------------------------------------------------------------------------
 
-df_combined["age"] = df_combined["DS_FAIXA_ETARIA"].str.replace('anos', 'years')
-df_combined["age"] = df_combined["age"].str.replace('Superior a', 'Above')
+df_combined["age"] = df_combined["DS_FAIXA_ETARIA"].str.replace("anos", "years")
+df_combined["age"] = df_combined["age"].str.replace("Superior a", "Above")
 
 plt.figure(figsize=(10, 6))
-sns_plot=sns.barplot(data=df_combined, x="age", y="frac", hue="cat")
+sns_plot = sns.barplot(data=df_combined, x="age", y="frac", hue="cat")
 
 # Rotate x labels for better readability
 plt.xticks(rotation=45, ha="right")
@@ -955,60 +968,45 @@ comb = combine_platforms(rel_approval_dic=rel_approval, alpha=ci)
 comb = smooth_relative_approval(comb, 40)
 print(comb)
 
-y_shift = {
+y_shifts = [
+    {
         "André Fernandes": -0.5,
         "Evandro Leitão": 0.5,
         "Capitão Wagner": 0,
-        "José Sarto": 0
-    }
-
-tit=f"Aprovação Relativa - Instagram e Facebook combinados"
-ylabel="Aprovação Relativa (%)"
-# ylabel="Relative Approval (%)"
-
-# tit=f"Relative Approval Combined"
-filename="none"
-if filename !="none":
-    filename=f"20241004a_rel_approv_Combined"
-
-col="vote_intention"
-
-plot_relative_approval(
-    comb,
-    col,
-    custom_palette,
-    tit=tit,
-    filename=filename,
-    ylabel=ylabel,
-    y_shift=y_shift
-
-)
-y_shift = {
-        "André Fernandes": -1.,
-        "Evandro Leitão": 1.,
+        "José Sarto": 0,
+    },
+    {
+        "André Fernandes": 0.0,
+        "Evandro Leitão": 0.0,
         "Capitão Wagner": 0,
-        "José Sarto": 0
-    }
+        "José Sarto": 0,
+    },
+]
 
-col="vote_intention_ewma"
-tit=f"Aprovação Relativa Acumulada - Instagram e Facebook combinados"
+for col, y_shift in zip(cols, y_shifts):
+    if col == "vote_intention":
+        tit = f"Aprovação Relativa - Instagram e Facebook combinados"
+        filename = f"{hoje}_rel_approv_Combined"
+    else:
+        tit = f"Aprovação Relativa Acumulada - Instagram e Facebook combinados"
+        filename = f"{hoje}_ewma_rel_approv_Combined"
 
-# tit=f"EWMA Filtered Relative Approval Combined"
-if filename !="none":
-    filename=f"20241004a_smooth_rel_approv_Combined"
+    ylabel = "Aprovação Relativa (%)"
+    # ylabel="Relative Approval (%)"
+
+    # filename = "none"
 
 
-plot_relative_approval(
-    comb,
-    col,
-    custom_palette,
-    tit=tit,
-    filename=filename,
-    ylabel=ylabel,
-    y_shift=y_shift,
-    ylim=(0.1,.4)
+    plot_relative_approval(
+        comb,
+        col,
+        custom_palette,
+        tit=tit,
+        filename=filename,
+        ylabel=ylabel,
+        y_shift=y_shift,
+    )
 
-)
+
 
 # %%
-10-40
