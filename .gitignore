@@ -1,5 +1,7 @@
 **/.env
 **/*.py
 **/*.ipynb
+**/.ipynb_checkpoints
 code/*
+
 
